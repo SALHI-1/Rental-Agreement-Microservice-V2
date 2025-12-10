@@ -46,21 +46,31 @@ public class RentalContractService {
     /**
      * Récupère un contrat par son ID interne.
      */
-    public RentalContractDto getContractById(Long contractId) {
+    public RentalContractDto getContractById(Long contractId,UserPrincipal principal) {
         RentalContract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rental contract not found."));
-        // L'autorisation (tenant/owner) doit être vérifiée par l'appelant
+
+        if(!principal.getIdUser().equals(contract.getTenantId()) &&
+                !principal.getIdUser().equals(contract.getOwnerId()) &&
+                !principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")) )
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"the only one who can get the contract is the tenet,owner or the admin");
+
+        }
+
+
         return contractMapper.toDto(contract);
     }
 
     /**
      * Récupère tous les contrats d'un utilisateur (en tant que propriétaire ou locataire).
      */
-    public List<RentalContractDto> getAllContractsForUser(Long userId) {
+    public List<RentalContractDto> getAllContractsForUser(UserPrincipal principal) {
+
         // Trouver les contrats où l'utilisateur est propriétaire
-        List<RentalContract> ownerContracts = contractRepository.findByOwnerId(userId);
+        List<RentalContract> ownerContracts = contractRepository.findByOwnerId(principal.getIdUser());
         // Trouver les contrats où l'utilisateur est locataire
-        List<RentalContract> tenantContracts = contractRepository.findByTenantId(userId);
+        List<RentalContract> tenantContracts = contractRepository.findByTenantId(principal.getIdUser());
 
         ownerContracts.addAll(tenantContracts);
 
@@ -104,7 +114,7 @@ public class RentalContractService {
         contract.setStartDate(dto.getStartDate());
         contract.setEndDate(dto.getEndDate());
 
-        String rentalType = "MONTHLY"; //TODO :: this should come from the property itself
+        String rentalType = property.typeOfRental().toString();
 
         Double TotalAmountToPay = contract.calculateTotalAmount(contract.getStartDate(), contract.getEndDate(), contract.getRentAmount(),rentalType );
 

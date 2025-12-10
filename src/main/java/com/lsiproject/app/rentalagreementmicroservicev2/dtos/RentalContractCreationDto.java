@@ -12,7 +12,7 @@ public class RentalContractCreationDto {
     private Long rentalRequestId;
     private Long agreementIdOnChain;
     private Long propertyId;
-    private Long ownerId; // L'ID du propriétaire
+    private Long ownerId;
 
     // Termes du contrat
     private Double securityDeposit;

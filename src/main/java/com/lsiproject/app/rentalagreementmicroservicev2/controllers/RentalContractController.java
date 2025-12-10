@@ -25,7 +25,7 @@ public class RentalContractController {
         this.contractService = contractService;
     }
 
-    // --- CREATE Operation (Étape 3: Déclenché par le paiement initial) ---
+
 
     /**
      * POST /api/v1/rental-contracts
@@ -55,10 +55,9 @@ public class RentalContractController {
      * @return ResponseEntity avec les détails du contrat.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<RentalContractDto> getContractById(@PathVariable Long id) {
-        // L'autorisation (s'assurer que l'utilisateur est bien le tenant ou l'owner) devrait idéalement
-        // être vérifiée ici ou dans le service pour des raisons de sécurité.
-        RentalContractDto contract = contractService.getContractById(id);
+    public ResponseEntity<RentalContractDto> getContractById(@PathVariable Long id,@AuthenticationPrincipal UserPrincipal principal) {
+
+        RentalContractDto contract = contractService.getContractById(id,principal);
         return ResponseEntity.ok(contract);
     }
 
@@ -71,7 +70,7 @@ public class RentalContractController {
      */
     @GetMapping("/user/me")
     public ResponseEntity<List<RentalContractDto>> getAllUserContracts(@AuthenticationPrincipal UserPrincipal principal) {
-        List<RentalContractDto> contracts = contractService.getAllContractsForUser(principal.getIdUser());
+        List<RentalContractDto> contracts = contractService.getAllContractsForUser(principal);
         return ResponseEntity.ok(contracts);
     }
 

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -42,9 +43,35 @@ public class RentalRequestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRequest);
     }
 
+    @GetMapping("/property/{propertyId}")
+    public ResponseEntity<List<RentalRequestDto>> getRequestsForProperty(
+            @PathVariable Long propertyId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        List<RentalRequestDto> requests =
+                rentalRequestService.findAllRequestsForProperty(propertyId, principal);
+
+        return ResponseEntity.ok(requests);
+    }
+
+    /**
+     * Get all rental requests made by a given tenant
+     */
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<List<RentalRequestDto>> getRequestsForTenant(
+            @PathVariable Long tenantId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        List<RentalRequestDto> requests =
+                rentalRequestService.findAllRequestsForTenant(tenantId,principal);
+
+        return ResponseEntity.ok(requests);
+    }
+
     /**
      * GET /api/v1/rental-requests/{id}
      * Récupère une demande par ID.
+     * * The only one who can come here is the Admin (ROLE_ADMIN)
      */
     @GetMapping("/{id}")
     public ResponseEntity<RentalRequestDto> getRequestById(@PathVariable Long id) {
@@ -56,8 +83,8 @@ public class RentalRequestController {
      * Récupère tous les de;qndes
      */
     @GetMapping
-    public ResponseEntity<List<RentalRequestDto>> getRequestById() {
-        List<RentalRequestDto> request = rentalRequestService.getAllRequests();
+    public ResponseEntity<List<RentalRequestDto>> getAllRequests(@AuthenticationPrincipal UserPrincipal principal) {
+        List<RentalRequestDto> request = rentalRequestService.getAllRequests(principal);
         return ResponseEntity.ok(request);
     }
 

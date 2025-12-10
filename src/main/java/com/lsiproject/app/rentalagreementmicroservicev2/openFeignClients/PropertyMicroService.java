@@ -1,16 +1,18 @@
 package com.lsiproject.app.rentalagreementmicroservicev2.openFeignClients;
 
+import com.lsiproject.app.rentalagreementmicroservicev2.configuration.FeignConfig;
+import com.lsiproject.app.rentalagreementmicroservicev2.dtos.AvailabilityDTO;
 import com.lsiproject.app.rentalagreementmicroservicev2.dtos.PropertyResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
         name = "PropertyMicroService",
-        url = "http://localhost:8082"
+        url = "http://localhost:8082",
+        configuration = FeignConfig.class
 )
+
+
 public interface PropertyMicroService {
 
     @GetMapping("/api/property-microservice/properties/{id}")
@@ -19,6 +21,6 @@ public interface PropertyMicroService {
     @GetMapping("/api/property-microservice/properties/{id}/isAvailable")
     boolean isPropertyAvailable(@PathVariable Long id);
 
-    @PatchMapping("/api/property-microservice/properties/{id}/availability")
-    void updateAvailability(@PathVariable Long id, @RequestBody boolean available);
+    @GetMapping("/api/property-microservice/properties/{id}/availability")
+    void updateAvailabilityToFalse(@PathVariable Long id);
 }

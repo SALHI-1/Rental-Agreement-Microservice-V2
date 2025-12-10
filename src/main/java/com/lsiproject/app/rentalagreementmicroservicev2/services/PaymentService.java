@@ -92,7 +92,8 @@ public class PaymentService {
         // Vérification d'autorisation: Seul le locataire ou le propriétaire du contrat peut voir ce paiement
         RentalContract contract = payment.getRentalContract();
         if (!Objects.equals(contract.getTenantId(), principal.getIdUser()) &&
-                !Objects.equals(contract.getOwnerId(), principal.getIdUser())) {
+                !Objects.equals(contract.getOwnerId(), principal.getIdUser())&&
+                !principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             throw new AccessDeniedException("User is not authorized to view this payment.");
         }
 
@@ -106,9 +107,10 @@ public class PaymentService {
         RentalContract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rental contract not found."));
 
-        // Vérification d'autorisation: Seul le locataire ou le propriétaire du contrat peut voir cet historique
+        // Vérification d'autorisation: Seul le locataire ou le propriétaire du contrat et ladmin peut voir cet historique
         if (!Objects.equals(contract.getTenantId(), principal.getIdUser()) &&
-                !Objects.equals(contract.getOwnerId(), principal.getIdUser())) {
+                !Objects.equals(contract.getOwnerId(), principal.getIdUser())&&
+                !principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             throw new AccessDeniedException("User is not authorized to view this payment history.");
         }
 

@@ -1,10 +1,7 @@
 package com.lsiproject.app.rentalagreementmicroservicev2.services;
 
 
-import com.lsiproject.app.rentalagreementmicroservicev2.dtos.PropertyResponseDTO;
-import com.lsiproject.app.rentalagreementmicroservicev2.dtos.RentalRequestCreationDto;
-import com.lsiproject.app.rentalagreementmicroservicev2.dtos.RentalRequestDto;
-import com.lsiproject.app.rentalagreementmicroservicev2.dtos.RentalRequestStatusUpdateDto;
+import com.lsiproject.app.rentalagreementmicroservicev2.dtos.*;
 import com.lsiproject.app.rentalagreementmicroservicev2.entities.RentalRequest;
 import com.lsiproject.app.rentalagreementmicroservicev2.enums.RentalRequestStatus;
 import com.lsiproject.app.rentalagreementmicroservicev2.mappers.RentalRequestMapper;
@@ -97,14 +94,34 @@ public class RentalRequestService {
     /**
      * Récupère toutes les demandes pour une propriété spécifique.
      */
-    public List<RentalRequestDto> findAllRequestsForProperty(Long propertyId) {
+    public List<RentalRequestDto> findAllRequestsForProperty(Long propertyId,UserPrincipal principal) {
+
+        PropertyResponseDTO property;
+
+        try {
+            property = propertyMicroService.getPropertyById(propertyId);
+
+            //check if the property is available
+            if(!property.ownerId().equals(principal.getIdUser())){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "the user sending this request should be the owner of the property");
+            }
+
+        } catch (FeignException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Property not found");
+        }
+
         return rentalRequestMapper.toDtoList(rentalRequestRepository.findByPropertyId(propertyId));
     }
 
     /**
      * Récupère toutes les demandes faites par un locataire.
      */
-    public List<RentalRequestDto> findAllRequestsForTenant(Long tenantId) {
+    public List<RentalRequestDto> findAllRequestsForTenant(Long tenantId,UserPrincipal principal) {
+
+        if (!tenantId.equals(principal.getIdUser())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You are not allowed to view rental requests of another tenant.");
+        }
         return rentalRequestMapper.toDtoList(rentalRequestRepository.findByTenantId(tenantId));
     }
 
@@ -118,7 +135,14 @@ public class RentalRequestService {
     }
 
 
-    public List<RentalRequestDto> getAllRequests(){
+    public List<RentalRequestDto> getAllRequests(UserPrincipal principal){
+        if(!principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")))
+        {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"the only one who can see all the requests is admin");
+        }
+
+
+
         return rentalRequestMapper.toDtoList(rentalRequestRepository.findAll());
     }
     /**
@@ -152,8 +176,10 @@ public class RentalRequestService {
             // propriété doivent être REJECTED.
             rejectOtherPendingRequests(request.getPropertyId(), requestId);
 
+
+
             //make the property unnavailable for rental
-            propertyMicroService.updateAvailability(property.idProperty(), false);
+            propertyMicroService.updateAvailabilityToFalse(property.idProperty() );
         }
 
         // 2. Mise à jour du statut (la seule mise à jour autorisée)
