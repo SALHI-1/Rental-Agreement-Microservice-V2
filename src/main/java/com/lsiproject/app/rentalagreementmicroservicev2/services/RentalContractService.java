@@ -181,4 +181,49 @@ public class RentalContractService {
         contract = contractRepository.save(contract);
         return contractMapper.toDto(contract);
     }
+
+    /**
+     * Termine le contrat par dispute.
+     * Accessible uniquement par le locataire ou le propriétaire.
+     * @param contractId L'ID du contrat interne.
+     * @param principal L'utilisateur authentifié.
+     * @return Le contrat mis à jour avec le statut DISPUTED.
+     */
+    @Transactional
+    public RentalContractDto terminateContractByDispute(Long contractId, UserPrincipal principal) {
+        RentalContract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rental contract not found."));
+
+        PropertyResponseDTO property;
+
+        try {
+            property = propertyMicroService.getPropertyById(contract.getPropertyId());
+        } catch (FeignException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Property not found");
+        }
+
+        // 1. Vérification d'autorisation (Tenant ou Owner uniquement)
+        boolean isTenant = contract.getTenantId().equals(principal.getIdUser());
+        boolean isOwner = contract.getOwnerId().equals(principal.getIdUser());
+
+        if (!isTenant && !isOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the tenant or the owner can terminate the contract by dispute.");
+        }
+
+        // 2. Vérification optionnelle de l'état actuel (par exemple, éviter de disputer un contrat déjà terminé)
+        // Vous pouvez commenter cette partie si vous souhaitez autoriser la dispute quel que soit l'état actuel.
+        if (contract.getState() == RentalContractState.DISPUTED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Contract is already disputed.");
+        }
+
+        // 3. Mise à jour de l'état
+        contract.setState(RentalContractState.DISPUTED);
+
+        // 4. Sauvegarde
+        contract = contractRepository.save(contract);
+
+        propertyMicroService.updateAvailabilityToTrue(property.idProperty());
+
+        return contractMapper.toDto(contract);
+    }
 }

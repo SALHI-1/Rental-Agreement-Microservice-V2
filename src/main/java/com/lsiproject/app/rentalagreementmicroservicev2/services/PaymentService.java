@@ -18,6 +18,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Objects;
 
+import static com.lsiproject.app.rentalagreementmicroservicev2.enums.RentalContractState.ACTIVE;
+
 /**
  * Service pour la gestion de l'historique des paiements.
  * Les opérations de CREATE sont destinées au service d'écoute blockchain.
@@ -55,6 +57,12 @@ public class PaymentService {
         // 2. Vérification de l'existence du contrat
         RentalContract contract = contractRepository.findById(dto.getRentalContractId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rental contract not found."));
+
+
+        if(contract.getState() != ACTIVE){
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Payment rejected: The contract is not in an ACTIVE state. Current state: " + contract.getState());
+        }
 
         if(contract.getPayedAmount() >= contract.getTotalAmountToPay()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

@@ -23,4 +23,7 @@ public interface PropertyMicroService {
 
     @GetMapping("/api/property-microservice/properties/{id}/availability")
     void updateAvailabilityToFalse(@PathVariable Long id);
+
+    @GetMapping("/api/property-microservice/properties/{id}/availability")
+    void updateAvailabilityToTrue(@PathVariable Long id);
 }
