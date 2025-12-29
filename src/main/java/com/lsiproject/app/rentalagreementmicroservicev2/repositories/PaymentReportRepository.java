@@ -8,6 +8,8 @@ import java.util.List;
 
 @Repository
 public interface PaymentReportRepository extends JpaRepository<PaymentReport, Long> {
-    // Helper to find reports for a specific contract
-    List<PaymentReport> findByRentalContract_IdContract(Long contractId);
+    PaymentReport findByRentalContract_IdContract(Long contractId);
+    PaymentReport findByTenentID(Long tenentID);
+
+
 }

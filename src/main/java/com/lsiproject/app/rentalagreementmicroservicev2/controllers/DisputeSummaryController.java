@@ -1,11 +1,10 @@
 package com.lsiproject.app.rentalagreementmicroservicev2.controllers;
 
+import com.lsiproject.app.rentalagreementmicroservicev2.dtos.CreateDisputeRequest;
 import com.lsiproject.app.rentalagreementmicroservicev2.entities.DisputeSummary;
 import com.lsiproject.app.rentalagreementmicroservicev2.services.DisputeSummaryService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,6 +17,11 @@ public class DisputeSummaryController {
     public DisputeSummaryController(DisputeSummaryService disputeSummaryService) {
         this.disputeSummaryService = disputeSummaryService;
     }
+    @PostMapping
+    public ResponseEntity<DisputeSummary> createDespute(@RequestBody CreateDisputeRequest requ) {
+        DisputeSummary disputes = disputeSummaryService.trackDispute(requ.getTenantId());
+        return ResponseEntity.ok(disputes);
+    }
 
     /**
      * Endpoint to retrieve all dispute summaries.
@@ -29,4 +33,8 @@ public class DisputeSummaryController {
         List<DisputeSummary> disputes = disputeSummaryService.getAllDisputeSummaries();
         return ResponseEntity.ok(disputes);
     }
+
+
+
+
 }

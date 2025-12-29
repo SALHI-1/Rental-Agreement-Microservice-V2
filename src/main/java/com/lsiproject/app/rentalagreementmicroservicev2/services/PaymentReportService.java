@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,6 +50,8 @@ public class PaymentReportService {
 
         // 2. Fetch Total Paid (Only CONFIRMED payments)
         Double totalPaid = paymentRepository.sumAmountByContractId(contract.getIdContract());
+        System.out.println("Total paid : " + totalPaid);
+        System.out.println(LocalDateTime.now());
         if (totalPaid == null) totalPaid = 0.0;
 
         // 3. Get Rental Type (Daily/Monthly) from Microservice
@@ -99,7 +102,11 @@ public class PaymentReportService {
         if (contract.getState() == RentalContractState.DISPUTED) status = "DISPUTED";
 
         // 7. Save Report to Database
-        PaymentReport report = new PaymentReport();
+        PaymentReport report = reportRepository.findByRentalContract_IdContract(contractId);
+
+        if(report==null){
+            report = new PaymentReport();
+        }
         report.setRentalContract(contract);
         report.setTotalPaidSoFar(totalPaid);
         report.setTotalExpectedSoFar(totalExpected);

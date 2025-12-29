@@ -23,7 +23,7 @@ public class DisputeSummaryService {
      * Calculates the gap (days) since the last dispute.
      */
     @Transactional
-    public void trackDispute(Long tenantId) {
+    public DisputeSummary trackDispute(Long tenantId) {
         LocalDateTime now = LocalDateTime.now();
 
         DisputeSummary summary = repository.findById(tenantId)
@@ -47,6 +47,7 @@ public class DisputeSummaryService {
         }
 
         repository.save(summary);
+        return summary;
     }
 
     public List<DisputeSummary> getAllDisputeSummaries() {
