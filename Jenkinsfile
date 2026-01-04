@@ -1,6 +1,6 @@
 @Library('PrincipalPipeLine') _
 
 standardBackendPipeline(
-    appName: 'rental-agreement-service',
-    registry: 'yassinekamouss'
+    appName: 'rental-agreement-v2',
+    registry: 'saaymo'
 )
